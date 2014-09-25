@@ -13,7 +13,6 @@
     <!-- leaflets JS -->
     <script src="http://cdn.leafletjs.com/leaflet-0.7.3/leaflet.js"></script>
     
-
     <script>
 
         var markerLayerGroup = undefined;
@@ -75,12 +74,14 @@
                             var lon = measurement.stacion.kordinatat.gjatesi;
                             var lat = measurement.stacion.kordinatat.gjeresi;
 
-                            //console.log(measurement);
-                            //console.log(measurementKey);
+                            var stationName = measurement.stacion.emri;
+                            var stationCode = measurement.stacion.kodi;
                             var measurementValue = measurement[measurementKey].vlere + " " + measurement[measurementKey].njesia 
 
+                            var popupContent = stationName + " (" + stationCode + ")<br><strong>" + measurementValue + "</strong>";
+
                             var marker = L.marker([lat, lon]);
-                            marker.bindPopup(measurementValue);
+                            marker.bindPopup(popupContent);
                             markerArray.push(marker);
                             
                         }
