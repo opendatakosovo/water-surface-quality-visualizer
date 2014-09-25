@@ -12,6 +12,8 @@ from utils.utils import Utils
 utils = Utils()
 
 from views.index import Index
+from views.averages import Averages
+from views.browser import Browser
 from views.measurements import Measurements
 
 
@@ -116,6 +118,16 @@ def register_url_rules(app):
     app.add_url_rule(
         '/',
         view_func=Index.as_view('index'))
+
+    # Show Averages map
+    app.add_url_rule(
+        '/mesatare',
+        view_func=Averages.as_view('mesatare'))
+
+    # Show Browser map
+    app.add_url_rule(
+        '/browser',
+        view_func=Browser.as_view('browser'))
 
      # Get measurements
     app.add_url_rule(
