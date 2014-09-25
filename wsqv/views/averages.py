@@ -9,4 +9,4 @@ class Averages(View):
     def dispatch_request(self):
 
         return render_template(
-            'mesatare.html')
+            'mesataret.html')
