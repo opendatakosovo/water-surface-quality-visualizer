@@ -22,47 +22,78 @@
 
         <script>
 
+            var markerLayerGroup = undefined;
+            var markerArray = [];
+
             $(document).ready(function(){
                 var map = L.map('map').setView([42.551056983385934, 20.87127685546875], 9);
-                var marker = null;
 
                 L.tileLayer('http://{s}.tiles.mapbox.com/v3/georges.jjc3k7b1/{z}/{x}/{y}.png', {
                     attribution: 'Data Source: <a href="http://opendatakosovo.org">Open Data Kosovo</a>',
                     maxZoom: 18
                 }).addTo(map);
 
-                // Init map with markers for default year and months selection.
-                var year = $('#year').find(":selected").text();
-                var month = $('#month').find(":selected").text();
+                initMap();
 
-                addMarkers(year, month);
-
-                // Query date when selecting a month.
+                // Get measurements when selecting a month.
                 // No need to listen to changes on year Select element because we only have one year (i.e. 2013).
                 $('#month').on('change', function (e) {
-                    var year = $('#year').find(":selected").text();
+                    var year = $('#year').find(":selected").val();
                     var month = this.value;
+                    var measurementKey = $('#measurement').find(":selected").val();
 
-                    addMarkers(year, month);                 
+                    addMarkers(year, month, measurementKey);                 
                 });
 
-                function addMarkers(year, month){
+                // Get measurements when selecting a measurement.
+                $('#measurement').on('change', function (e) {
+                    var year = $('#year').find(":selected").val();
+                    var month = $('#month').find(":selected").val();
+                    var measurementKey = this.value;
+
+                    addMarkers(year, month, measurementKey);                 
+                });
+
+                function initMap(){
+                    // Init map with markers for default year, months and measurement selection.
+                    var year = $('#year').find(":selected").val();
+                    var month = $('#month').find(":selected").val();
+                    var measurementKey = $('#measurement').find(":selected").val();
+
+                    addMarkers(year, month, measurementKey);
+                }
+
+                function addMarkers(year, month, measurementKey){
                     var requestUrl = "/measurements?year=" + year + "&month=" + month;
 
-                    if(marker){
-                        map.removeLayer(marker)
+                    // Reset marker array
+                    markerArray = [];
+
+                    // Clear previous layer of markers
+                    if(markerLayerGroup != undefined){
+                        map.removeLayer(markerLayerGroup);
                     }
 
                     $.get(requestUrl, function(data, status){
                         $.each(data, function(key, measurement) {
-                            var lon = measurement.stacion.kordinatat.gjatesi;
-                            var lat = measurement.stacion.kordinatat.gjeresi;
 
-                            var temperaturaUjit = measurement.temperaturaUjit.vlere + " " + measurement.temperaturaUjit.njesia 
+                            if(measurement[measurementKey] != undefined){
+                                var lon = measurement.stacion.kordinatat.gjatesi;
+                                var lat = measurement.stacion.kordinatat.gjeresi;
 
-                            marker = L.marker([lat, lon]).addTo(map);
-                            marker.bindPopup("<strong>Temperatura Ujit:</stong>: " + temperaturaUjit)
-                        }); 
+                                //console.log(measurement);
+                                //console.log(measurementKey);
+                                var measurementValue = measurement[measurementKey].vlere + " " + measurement[measurementKey].njesia 
+
+                                var marker = L.marker([lat, lon]);
+                                marker.bindPopup(measurementValue);
+                                markerArray.push(marker);
+                                
+                            }
+                        });
+
+                        markerLayerGroup = L.layerGroup(markerArray);
+                        map.addLayer(markerLayerGroup);
                     });
                 }
             });
@@ -75,17 +106,17 @@
 
 
     <body>
-        <table border="1" width="100%">
+        <table width="100%">
             <tr>
                 <td width="1%">
                     <div id="map"></div>
                 </td>
-                <td width="99%">
+                <td width="99%" valign="top" style="padding: 20px">
                     <div id="control-panel">
                         <form class="form-horizontal">
                             <div class="form-group">
                                 <label for="year" class="control-label col-xs-2">Viti</label>
-                                <div class="col-xs-4">
+                                <div class="col-xs-5">
                                     <select class="form-control" id="year" name="year">
                                         <option value="2013">2013</option>
                                     </select>
@@ -94,7 +125,7 @@
 
                             <div class="form-group">
                                 <label for="month" class="control-label col-xs-2">Muji</label>
-                                <div class="col-xs-4">
+                                <div class="col-xs-5">
                                     <select class="form-control" id="month" name="month">
                                         <option value="1">Janar</option>
                                         <option value="2">Shkurt</option>
@@ -108,6 +139,47 @@
                                         <option value="10">Tetor</option>
                                         <option value="11">Nentor</option>
                                         <option value="12">Dhjetor</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="measurement" class="control-label col-xs-2">Paramet&euml;r</label>
+                                <div class="col-xs-5">
+                                    <select class="form-control" id="measurement" name="measurement">
+                                        <option value="alkalitetiTotal">Alkaliteti total</option>
+                                        <option value="amoniumiPajonizuar" selected>Amoniumi i pajonizuar</option>
+                                        <option value="azotiAmoniumit">Azoti i amoniumit</option>
+                                        <option value="azotiAmoniumitTePajonizuar">Azoti i amoniumit te pajonizuar</option>
+                                        <option value="azotiNitrateve">Azoti i nitrateve</option>
+                                        <option value="azotiNitriteve">Azoti i nitriteve</option>
+                                        <option value="azotiTotalInorganik">Azoti total inorganik</option>
+                                        <option value="bikarbonatet">Bikarbonatet</option>
+                                        <option value="detergjentet">Detergjentet</option>
+                                        <option value="fortesiaKalciumit">Fort&euml;sia e Kalciumit</option>
+                                        <option value="fortesiaMagnezit">Fort&euml;sia e Magnezit</option>
+                                        <option value="fortesiaPergjithshme">Fort&euml;sia e p&euml;rgjithshme</option>
+                                        <option value="fosforiOrtofosfateve">Fosfori I ortofosfateve</option>
+                                        <option value="fosforiTotalPoliOrto)">Fosfori total (poli+orto)</option>
+                                        <option value="jonetKalciumit">Jonet e Kalciumit</option>
+                                        <option value="jonetMagnezit">Jonet e Magnezit</option>
+                                        <option value="joniAmonium">Joni amonium</option>
+                                        <option value="joniNitratet">Joni nitratet</option>
+                                        <option value="joniNitrit">Joni nitrit</option>
+                                        <option value="joniSulfat">Joni sulfat</option>
+                                        <option value="karboniOrganikTotal">Karboni organik total</option>
+                                        <option value="alkaliteti">M-Alkaliteti</option>
+                                        <option value="materietTretshmeNeUje">Materiet e tretshme n&euml; uj&euml;</option>
+                                        <option value="meterietTotaleTeSuspenduara">Meteriet totale t&euml; suspenduara</option>
+                                        <option value="ngopshmeriaMeOksigjen">Ngopshmeria me oksigjen</option>
+                                        <option value="oksigjeniTretur">Oksigjeni i tretur</option>
+                                        <option value="ortofosfatet">Ortofosfatet</option>
+                                        <option value="perqendrimiJonitHidrogjen">P&euml;rq&euml;ndrimi i jonit hidrogjen</option>
+                                        <option value="perqueshmeriaElektrike">Perqueshm&euml;ria elektrike</option>
+                                        <option value="shpenzimiBiokimikOksigjenitSHBO5">Shpenzimi biokimik i oksigjenit</option>
+                                        <option value="shpenzimiKimikOksigjenit">Shpenzimi kimik i oksigjenit</option>
+                                        <option value="temperaturaUjit">Temperatura e ujit</option>
+                                        <option value="turbullira">Turbullira</option>
                                     </select>
                                 </div>
                             </div>
