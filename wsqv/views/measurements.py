@@ -11,16 +11,13 @@ class Measurements(View):
 
     def dispatch_request(self):
 
-        print 'asasas'
-
         api_url = utils.get_api_url()
 
-        year = request.args.get('year', '')
-        month = request.args.get('month', '')
+        year = request.args.get('viti', '')
+        month = request.args.get('muji', '')
+        station = request.args.get('stacion', '')
 
-        request_url = "%s/measurements?year=%s&month=%s" % (api_url, year, month)
-
-        print request_url
+        request_url = "%s/measurements?year=%s&month=%s&station=%s" % (api_url, year, month, station)
 
         measurements = urlopen(request_url).read()
 

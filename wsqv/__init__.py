@@ -129,7 +129,7 @@ def register_url_rules(app):
         '/browser',
         view_func=Browser.as_view('browser'))
 
-     # Get measurements
+    # Get measurements
     app.add_url_rule(
         '/measurements',
         view_func=Measurements.as_view('measurements'))

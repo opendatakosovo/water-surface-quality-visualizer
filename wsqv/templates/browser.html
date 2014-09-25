@@ -5,15 +5,19 @@
     <link rel="stylesheet" href="http://cdn.leafletjs.com/leaflet-0.7.3/leaflet.css" />
     <style>
         #map { 
-            height: 800px;
-            width: 800px; 
+            height: 700px;
+            width: 675px; 
         }
     </style>
+
+    <!-- Google Charts -->
+    <script type="text/javascript" src="https://www.google.com/jsapi"></script>
 
     <!-- leaflets JS -->
     <script src="http://cdn.leafletjs.com/leaflet-0.7.3/leaflet.js"></script>
     
     <script>
+        google.load("visualization", "1", {packages:["corechart"]});
 
         var markerLayerGroup = undefined;
         var markerArray = [];
@@ -57,7 +61,7 @@
             }
 
             function addMarkers(year, month, measurementKey){
-                var requestUrl = "{{ config.BASE_PATH }}/measurements?year=" + year + "&month=" + month;
+                var mapDataRequestUrl = "{{ config.BASE_PATH }}/measurements?viti=" + year + "&muji=" + month;
 
                 // Reset marker array
                 markerArray = [];
@@ -67,7 +71,8 @@
                     map.removeLayer(markerLayerGroup);
                 }
 
-                $.get(requestUrl, function(data, status){
+                // Draw measurement markers on map
+                $.get(mapDataRequestUrl, function(data, status){
                     $.each(data, function(key, measurement) {
 
                         if(measurement[measurementKey] != undefined){
@@ -76,14 +81,67 @@
 
                             var stationName = measurement.stacion.emri;
                             var stationCode = measurement.stacion.kodi;
-                            var measurementValue = measurement[measurementKey].vlere + " " + measurement[measurementKey].njesia 
+                            var measurementValue = measurement[measurementKey].vlere + " " + measurement[measurementKey].njesia;
 
-                            var popupContent = stationName + " (" + stationCode + ")<br><strong>" + measurementValue + "</strong>";
+                            var stationSlug = measurement.stacion.slug;
+                            var year = $('#year').find(":selected").val();
+
+                            var popupContent = stationName + ' (' + stationCode + ')<br><strong>' + measurementValue + '</strong><inp';
 
                             var marker = L.marker([lat, lon]);
                             marker.bindPopup(popupContent);
+
+                            // When we click on a marker/station, draw graph of measurement values throughout the year.
+                            marker.on('click', function(){
+
+                                var dataTable = google.visualization.arrayToDataTable([]);
+                                dataTable.addColumn('string', 'Muji');
+                                dataTable.addColumn('number', 'Vlere')
+
+                                var lineChartDataRequestUrl = "{{ config.BASE_PATH }}/measurements?viti=" + year + "&stacion=" + stationSlug;
+
+                                $.get(lineChartDataRequestUrl, function(data, status){
+                                    $.each(data, function(key, stationMeasurement) {
+
+                                        drawChart = true;
+                                        
+                                        if(stationMeasurement[measurementKey] != undefined){
+                                            var month = stationMeasurement.data.muji;
+                                            var monthName = getMonthName(month);
+
+                                            var measurementValueForTheMonth = stationMeasurement[measurementKey].vlere;
+
+                                            dataTable.addRow([monthName, measurementValueForTheMonth]);
+                                        }else{
+                                            drawChart = false;
+                                        }
+                                    });
+
+                                    // Draw line chart
+                                    if(drawChart){
+                                        var measurementName = getMeasurementName(measurementKey);
+                                        var lineChartTitle = measurementName + " (" + year + ")";
+
+                                        var options = {
+                                            title: lineChartTitle,
+                                            legend: {position: 'none'},
+                                            vAxis: {title: measurement[measurementKey].njesia},
+                                            hAxis: {title: "Muji"},
+                                        };
+                                        var chart = new google.visualization.LineChart(document.getElementById('chart-container'));
+
+                                        chart.draw(dataTable, options);
+                                    }else{
+                                        $('#chart-container').html('');
+                                    }
+
+                                });
+                            });
+
                             markerArray.push(marker);
                             
+                        }else{
+                            $('#chart-container').html('');
                         }
                     });
 
@@ -91,6 +149,32 @@
                     map.addLayer(markerLayerGroup);
                 });
             }
+
+            function getMonthName(number){
+                var monthName = '';
+
+                $("#month > option").each(function() {
+                    if(this.value == number){
+                        monthName = this.text;
+                        return false;
+                    }
+                });
+
+                return monthName;
+            }
+
+            function getMeasurementName(measurementKey){
+                var measurementName = '';
+
+                $("#measurement > option").each(function() {
+                    if(this.value == measurementKey){
+                        measurementName = this.text;
+                        return false;
+                    }
+                });
+
+                return measurementName;
+            } 
         });
     </script>
 
@@ -170,6 +254,9 @@
                                     <option value="turbullira">Turbullira</option>
                                 </select>
                             </div>
+                        </div>
+                        <br><br>
+                        <div id="chart-container" style="width: 700px; height: 300px;">
                         </div>
                     </form>
                 </div>
