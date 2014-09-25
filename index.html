@@ -1,0 +1,98 @@
+<html>
+    <head>
+        <!-- Bootstrat compiled and minified CSS -->
+        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css">
+
+        <!-- Leaflets CSS -->
+        <link rel="stylesheet" href="http://cdn.leafletjs.com/leaflet-0.7.3/leaflet.css" />
+        <style>
+            #map { 
+                height: 800px;
+                width: 800px; 
+            }
+        </style>
+
+        <!-- jQuery -->
+        <script src="https://code.jquery.com/jquery-1.11.1.min.js"></script>
+
+        <!-- leaflets JS -->
+        <script src="http://cdn.leafletjs.com/leaflet-0.7.3/leaflet.js"></script>
+        <!-- Bootstrat compiled and minified JavaScript -->
+        <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/js/bootstrap.min.js"></script>
+
+        <script>
+            var API_HOST = "http://localhost:5010"
+
+            $(document).ready(function(){
+                // Query date when selecting a month.
+                // No need to listen to changes on year Select element because we only have one year (i.e. 2013).
+                $('#month').on('change', function (e) {
+                    var year = $('#year').find(":selected").text();
+                    var month = this.value;
+
+                    var requestUrl = API_HOST + "/measurements?year=" + year + "&month=" + month;
+
+                    $.get(requestUrl, function(data, status){
+                        console.log(data);
+                    });
+                });
+            });
+        </script>
+
+        <title>Kosovo Water Surface Quality Visualizer</title>
+    </head>
+
+
+    <body>
+        <table border="1" width="100%">
+            <tr>
+                <td width="1%">
+                    <div id="map"></div>
+                </td>
+                <td width="99%">
+                    <div id="control-panel">
+                        <form class="form-horizontal">
+                            <div class="form-group">
+                                <label for="year" class="control-label col-xs-2">Viti</label>
+                                <div class="col-xs-4">
+                                    <select class="form-control" id="year" name="year">
+                                        <option value="2013">2013</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="month" class="control-label col-xs-2">Muji</label>
+                                <div class="col-xs-4">
+                                    <select class="form-control" id="month" name="month">
+                                        <option value="1">Janar</option>
+                                        <option value="2">Shkurt</option>
+                                        <option value="3">Mars</option>
+                                        <option value="4">Prill</option>
+                                        <option value="5">Maj</option>
+                                        <option value="6">Qershor</option>
+                                        <option value="7">Korrik</option>
+                                        <option value="8">Gusht</option>
+                                        <option value="9">Shtator</option>
+                                        <option value="10">Tetor</option>
+                                        <option value="11">Nentor</option>
+                                        <option value="12">Dhjetor</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </td>
+            </tr>
+        </table>
+        
+        <script>
+            var map = L.map('map').setView([42.551056983385934, 20.87127685546875], 9);
+
+            L.tileLayer('http://{s}.tiles.mapbox.com/v3/georges.jjc3k7b1/{z}/{x}/{y}.png', {
+                attribution: 'Data Source: <a href="http://opendatakosovo.org">Open Data Kosovo</a>',
+                maxZoom: 18
+            }).addTo(map);
+        </script>
+    </body>
+</html>
